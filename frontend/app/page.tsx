@@ -1,65 +1,258 @@
-import Image from "next/image";
+"use client";
+import { useEffect, useState } from "react";
+import api from "./api";
+import toast from "react-hot-toast";
+import { Activity, ArrowDownCircle, ArrowUpCircle, Edit, PlusCircle, Trash, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 
+
+//-- Transaction interface --
+type Transaction = {
+  id: string;
+  text: string;
+  amount: number;
+  created_at: string;
+}
+
+//-- Home component --
 export default function Home() {
+  //-- create state for transactions--
+  const [transactions, setTransactions] = useState<Transaction[]>([]); 
+
+  //-- create state for text, amount and loading--
+  const [text, setText] = useState<string>(""); //-- create state for text--
+  const [amount, setAmount] = useState<number | "" >(0); //-- create state for amount--
+  const [loading, setLoading] = useState<boolean>(false);
+
+  //-- Get Transactions function from api and set to transactions state from api response data --
+  const getTransactions = async () => {
+    try{
+      const res = await api.get<Transaction[]>("transactions/"); //-- call /api/transactions/ URL from api.ts--
+      setTransactions(res.data); //-- set transactions to response data from api--
+      toast.success("Transactions fetched successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Error fetching transactions");
+    }
+  };
+
+  //-- Delete Transactions with id --
+    const deleteTransactions = async (id : string) => {
+    try{
+      await api.delete(`transactions/${id}/`); //-- delete /api/transactions/${id}/ URL from api.ts --
+      getTransactions();
+      toast('Transactions successfully deleted',{icon: '🗑️'});
+    } catch (error) {
+      console.error("Error deleting transaction", error);
+      toast.error("Error deleting transaction");
+    }
+  };
+
+  //-- Add Transactions --
+    const addTransactions = async () => {
+      if(!text || amount == "" || isNaN(Number(amount))) {
+        toast.error("Description and amount are required");
+        return
+      }
+      //-- set loading to true --
+      setLoading(true);
+      try{
+        await api.post("transactions/", {text, amount: Number(amount)}); //-- Send transactionsto api --
+        getTransactions();
+        setText("");
+        setAmount(0);
+        //-- close modal --
+        const modal = document.getElementById('my_modal_3') as HTMLDialogElement;
+        if(modal) {
+          modal.close();
+        }
+
+        toast.success("Transaction added successfully");
+
+      } catch (error) {
+        console.error("Error adding transaction",error);
+        toast.error("Error adding transaction");
+      } finally {
+        //-- set loading to false --
+        setLoading(false);
+      }
+    };
+
+
+  // -- Load Transactions function on Page load
+  useEffect(() => {
+    getTransactions(); 
+  }, []);
+
+  //-- Calculate balance, income, expense, total and ratio --
+  const amounts = transactions.map((t) => Number(t.amount) || 0); //-- create array of amounts from transactions--
+  const balance = amounts.reduce((acc, item) => (acc += item), 0) || 0; //-- calculate balance by adding all amounts in amounts array-- acc = accumulator, item = current item in amounts array
+  const income = amounts.filter((i) => i > 0).reduce((acc, i) => (acc += i), 0) || 0; //-- calculate income by adding all positive amounts in amounts array--
+  const expense = (
+    amounts.filter((i) => i < 0).reduce((acc, i) => (acc += i), 0) * 1 || 0
+  );//- calculate expense by adding all negative amounts in amounts array-- i is current item in amounts array
+ 
+  const ratio = income > 0 ? Math.min((Math.abs(expense) / income) * 100, 100) : 0; //-- calculate ratio by dividing expense by income-- if income is 0, ratio is 0 --
+
+  //-- Format date function to fr-FR --
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+  
+  //-- Render html page --
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="w-2/3 flex flex-col grap-4"> {/*-- create container for stats--*/}
+      <div className="flex justify-between border-2 border-warning/10 border-dotted rounded-2xl bg-warning/5 p-5"> {/*-- create container for stats--*/}
+
+        <div className="flex flex-col gap-1">          {/*-- create container for balance--*/}
+            <div className="badge badge-soft">
+              <Wallet className="w-4 h4"/>
+              Solde
+            </div>
+          <div className="stat-value">
+            {balance.toFixed(2)} Dh
+          </div> 
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="flex flex-col gap-1">          {/*-- create container for revenus--*/}
+          <div className="badge badge-soft badge-success">
+            <ArrowUpCircle className="w-4 h4"/>
+              Revenus
+          </div>
+          <div className="stat-value">
+            {income.toFixed(2)} Dh
+          </div> 
         </div>
-      </main>
+
+        <div className="flex flex-col gap-1">          {/*-- create container for depenses--*/}
+          <div className="badge badge-soft badge-error">
+            <ArrowDownCircle className="w-4 h4"/>
+              Dépenses
+          </div>
+          <div className="stat-value">
+            {expense.toFixed(2)} Dh
+          </div> 
+        </div>
+
+      </div>
+
+      <div className="border-2 border-warning/10 border-dotted rounded-2xl bg-warning/5 p-5"> {/*-- create container for ratio--*/}
+        <div className="flex justify-between items-center mb-1"> 
+          
+            <div className="badge badge-soft badge-warning gap-1"> {/*-- create container for ratio--*/}
+              <Activity className="w-4 h4"/>
+              Taux (Dépenses vs Revenus)
+            </div>
+            <div>
+              {ratio.toFixed(0)}%
+            </div>
+          
+
+        </div> 
+        <progress 
+          className="progress progress-warning" 
+          value={ratio} 
+          max="100" /> {/*-- create progress bar--*/}
+
+      </div>
+
+      { /*button */}
+        {/* You can open the modal using document.getElementById('ID').showModal() method */}
+        <button className="btn btn-warning" onClick={()=>(document.getElementById('my_modal_3') as HTMLDialogElement).showModal()}>
+          <PlusCircle className="w-4 h4"/>
+          Ajouter une transaction
+        </button>
+
+      <div className="overflow-x-auto border-2 border-warning/10 border-dotted rounded-2xl bg-warning/5">
+        <table className="table">
+          {/* head */}
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Description</th>
+              <th>Montant</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            {/*-- map transactions to table rows--*/}
+            {transactions.map((t, index) => ( 
+              <tr key={t.id}>
+                <th>{index + 1}</th>
+                <td>{t.text}</td>
+                <td className="font-semibold flex items-center gap-2"> {/*-- create container for amount with icon --*/}
+                  
+                  { /*-- if amount is positive, show trending up icon, else show trending down icon-*/}
+                  {t.amount > 0 ? (<TrendingUp className="text-success w-6 h-6"/>) : (<TrendingDown className="text-error w-6 h-6"/>)} 
+
+                  { /*-- if amount is positive, show plus sign, else show minus sign--*/}
+                  {t.amount > 0 ? `+${t.amount}` : `${t.amount}`}
+                </td>
+
+                { /*-- format date--*/}
+                <td>{formatDate(t.created_at)}</td>
+                <td>
+                  <button onClick={() => deleteTransactions(t.id)} className="btn btn-ghost btn-soft btn-xs" title="Supprimer"><Trash className="w-4 h-4"/></button>
+                </td>
+              </tr>
+            ))}
+
+
+
+          </tbody>
+        </table>
+
+      </div>
+        <dialog id="my_modal_3" className="modal backdrop-blur-xs">
+          <div className="modal-box border-2 border-warning/10 border-dotted">
+            <form method="dialog">
+              {/* if there is a button in form, it will close the modal */}
+              <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 className="font-bold text-lg">Ajouter une transaction</h3>
+            <div className="flex flex-col gap-4 mt-4">
+              <div className="flex flex-col gap-2">
+
+                <label htmlFor="description">Description</label>
+                <input className="input input-bordered"
+                type="text" 
+                name="text" 
+                placeholder="Entrez une description"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label htmlFor="amount">Montant (Dh)</label>
+                <input 
+                type="number" 
+                name="amount" 
+                className="input input-bordered"
+                onChange={(e) => setAmount(e.target.value === "" ? 0 : parseFloat(e.target.value))}
+                value={amount}
+                />
+              </div>
+
+
+              <div className="modal-action">
+                <button className="btn btn-warning" onClick={addTransactions} disabled={!text || !amount || loading}>
+                  <PlusCircle className="w-4 h4"/>
+                  Ajouter
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </dialog>
     </div>
   );
 }

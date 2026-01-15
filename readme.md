@@ -22,21 +22,21 @@
 
 # Step 2 (Frontend)
 
->1- mkdir frontend
+>1- mkdir frontend & cd frontend
 
->2- npx create-next-app@latest ./
+>2- npm install or (npx create-next-app@latest ./)
 
->3- npm run dev
+>3- npm i -D daisyui@latest
 
->4- npm i -D daisyui@latest
-
->5-Add daisyui to app.css
+>4-Add daisyui to app.css
 
     @plugin "daisyui";
     @import "tailwindcss";
 
->6- npm i axios
+>5- npm i axios
 
->7- npm add react-hot-toast
+>6- npm add react-hot-toast
 
->8- npm install lucide-react
+>7- npm install lucide-react
+
+>8- npm run dev
