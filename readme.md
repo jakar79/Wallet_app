@@ -33,10 +33,12 @@
     @plugin "daisyui";
     @import "tailwindcss";
 
->5- npm i axios
+>5- Create .env file and add (NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/)
 
->6- npm add react-hot-toast
+>6- npm i axios
 
->7- npm install lucide-react
+>7- npm add react-hot-toast
 
->8- npm run dev
+>8- npm install lucide-react
+
+>9- npm run dev
