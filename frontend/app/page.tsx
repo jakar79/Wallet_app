@@ -85,11 +85,9 @@ export default function Home() {
 
   //-- Calculate balance, income, expense, total and ratio --
   const amounts = transactions.map((t) => Number(t.amount) || 0); //-- create array of amounts from transactions--
-  const balance = amounts.reduce((acc, item) => (acc += item), 0) || 0; //-- calculate balance by adding all amounts in amounts array-- acc = accumulator, item = current item in amounts array
-  const income = amounts.filter((i) => i > 0).reduce((acc, i) => (acc += i), 0) || 0; //-- calculate income by adding all positive amounts in amounts array--
-  const expense = (
-    amounts.filter((i) => i < 0).reduce((acc, i) => (acc += i), 0) * 1 || 0
-  );//- calculate expense by adding all negative amounts in amounts array-- i is current item in amounts array
+  const balance = amounts.reduce((acc, item) => (acc += item), 0) || 0; //-- calculate balance by adding all amounts in amounts array-- acc = accumulator, item = current item in amounts array-- (Solde)
+  const income = amounts.filter((i) => i > 0).reduce((acc, i) => (acc += i), 0) || 0; //-- calculate income by adding all positive amounts in amounts array-- (Revenues)
+  const expense = (amounts.filter((i) => i < 0).reduce((acc, i) => (acc += i), 0) * 1 || 0);//- calculate expense by adding all negative amounts in amounts array-- i is current item in amounts array-- (Dépenses)
  
   const ratio = income > 0 ? Math.min((Math.abs(expense) / income) * 100, 100) : 0; //-- calculate ratio by dividing expense by income-- if income is 0, ratio is 0 --
 
@@ -226,17 +224,17 @@ export default function Home() {
                 type="text" 
                 name="text" 
                 placeholder="Entrez une description"
-                value={text}
                 onChange={(e) => setText(e.target.value)}
+                value={text}
                 />
               </div>
 
               <div className="flex flex-col gap-2">
                 <label htmlFor="amount">Montant (Dh)</label>
-                <input 
+                <input className="input input-bordered"
                 type="number" 
                 name="amount" 
-                className="input input-bordered"
+                placeholder=""
                 onChange={(e) => setAmount(e.target.value === "" ? 0 : parseFloat(e.target.value))}
                 value={amount}
                 />
