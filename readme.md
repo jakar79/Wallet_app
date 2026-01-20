@@ -18,7 +18,7 @@
 
 >9- python manage.py migrate
 
->10- python manage.py runserver
+>10- python manage.py runserver 8008
 
 # Step 2 (Frontend)
 
