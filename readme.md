@@ -20,6 +20,7 @@
 
 >10- python manage.py runserver 8008
 
+
 # Step 2 (Frontend)
 
 >1- mkdir frontend & cd frontend
@@ -42,3 +43,17 @@
 >8- npm install lucide-react
 
 >9- npm run dev
+
+# Resources:
+
+https://nextjs.org/
+
+https://daisyui.com/
+
+https://react-hot-toast.com/
+
+https://lucide.dev/guide/packages/lucide-react
+
+
+
+
